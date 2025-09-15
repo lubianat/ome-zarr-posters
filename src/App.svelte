@@ -41,7 +41,7 @@
 
   const topics = pages.flatMap((p) => p.topic_list?.topics ?? []);
   const monthUserCounts = new Map();
-  const userTotals = new Map();
+  let userTotals = new Map();
   const seenUsers = new Set();
 
   for (const t of topics) {
@@ -85,8 +85,7 @@
     }
   });
 
-  leaderboard = [...userTotals.entries()].sort((a, b) => b[1] - a[1]);
-
+  $: leaderboard = [...userTotals.entries()].sort((a, b) => b[1] - a[1]);
   // === D3 chart ===
   const color = d3.scaleOrdinal(d3.schemeTableau10);
 
@@ -119,12 +118,22 @@ function updateChart(index) {
 
   const month = months[index];
   let frame = longData.filter(d => d.date.startsWith(month));
-  frame = frame.sort((a, b) => b.value - a.value).slice(0, 12);
+  frame = frame.sort((a, b) => b.value - a.value)
+    console.log(frame);
+
+  const newTotals = new Map();
+  for (const p of frame) {
+    newTotals.set(p.name, p.value);
+    }
+  userTotals = newTotals;
+
+  frame=frame.slice(0, 12);
 
   // Pad with placeholders if fewer than 12
   while (frame.length < 12) {
     frame.push({ name: "", value: 0, icon: "" });
   }
+
 
   const avatarSize = 24;   // fixed px size for avatars
   const labelPadding = 6;  // gap between text and avatar
@@ -233,8 +242,7 @@ names.merge(gEnter).select("text")
 }
 
   // Slider controls
-  function onSlider(e) {
-    currentIndex = +e.target.value;
+  $: if (months.length && currentIndex >= 0) {
     updateChart(currentIndex);
   }
 
@@ -262,7 +270,8 @@ names.merge(gEnter).select("text")
 <main>
   <header>
     <h1>OME-Zarr posters in the image.sc forum</h1>
-    <p>Topics started up to that month in the <a href="https://forum.image.sc/" target="_blank">image.sc</a> forum with the <a href="https://forum.image.sc/tag/ome-zarr" target="_blank">ome-zarr</a> tag for which the person engaged at least once</p>
+    <p>Topics started in <a href="https://forum.image.sc/" target="_blank">image.sc</a>  with an <a href="https://forum.image.sc/tag/ome-zarr" target="_blank">ome-zarr</a> tag for which the person engaged at least once.</p>
+    <p>last updated 2025-09-15 (<a href="https://github.com/lubianat/ome-zarr-posters" target=blank>source</a>)</p>
     <p class="meta">
       <span>{topicsCount} topics</span>
       <span>•</span>
@@ -274,8 +283,12 @@ names.merge(gEnter).select("text")
     <svg bind:this={svgContainer}></svg>
     <div class="controls">
       <button on:click={togglePlay}>{playing ? "Pause" : "Play"}</button>
-      <input type="range" min="0" max={months.length - 1} bind:value={currentIndex} on:input={onSlider} />
-      <span>{months[currentIndex]}</span>
+<input
+  type="range"
+  min="0"
+  max={months.length - 1}
+  bind:value={currentIndex}
+/>      <span>{months[currentIndex]}</span>
     </div>
   </section>
 
