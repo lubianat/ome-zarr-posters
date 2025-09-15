@@ -250,6 +250,13 @@ names.merge(gEnter).select("text")
       clearInterval(timer);
     }
   }
+
+  let showAll = false;
+
+  $: displayedLeaderboard = showAll
+    ? leaderboard
+    : leaderboard.slice(0, 12);
+
 </script>
 
 <main>
@@ -275,7 +282,7 @@ names.merge(gEnter).select("text")
   <section class="board">
     <h2>Top Posters (by topic appearances)</h2>
     <ol>
-      {#each leaderboard as [user, count], i}
+      {#each displayedLeaderboard as [user, count], i}
         <li>
           <a class="user" href={`${BASE}/u/${user}`} target="_blank" rel="noopener">
             <img src={iconByUser[user] || ""} alt="" />
@@ -286,6 +293,12 @@ names.merge(gEnter).select("text")
         </li>
       {/each}
     </ol>
+
+    {#if leaderboard.length > 12}
+      <button class="toggle" on:click={() => showAll = !showAll}>
+        {showAll ? "Show less" : `Show all (${leaderboard.length})`}
+      </button>
+    {/if}
   </section>
 </main>
 
@@ -317,6 +330,20 @@ names.merge(gEnter).select("text")
   }
   .board .user { display:flex; align-items:center; gap:10px; text-decoration:none; color:#0f62fe; }
   .board img { width:28px; height:28px; border-radius:50%; }
+
+    .board .toggle {
+    margin: 12px auto 0;
+    display: block;
+    padding: 6px 14px;
+    font-size: 14px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    background: #f9fafb;
+    cursor: pointer;
+  }
+  .board .toggle:hover {
+    background: #f3f4f6;
+  }
 
   .user-link {
   cursor: pointer;
